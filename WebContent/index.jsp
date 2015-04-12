@@ -16,23 +16,65 @@
 <script>
 	var $pseudo = '';
 	var $room = '';
+	var $message;
+	var websocket;
+	
+	var $nickName;
+	var $chatWindow;
 
-	$(document).ready(function() {
+	function onMessageReceived(evt)
+	{
+		var msg = JSON.parse(evt.data); // message JSon -> objet JavaScript
+		var $messageLine = $('<tr><td class="received">' + msg.recu
+				+ '</td><td class="user label label-info">' + msg.emetteur
+				+ '</td><td class="message badge">' + msg.message
+				+ '</td></tr>');
+		$chatWindow.append($messageLine);
+	}
+
+	function sendMessage()
+	{
+		var msg = '{"message":"' + $message.val() + '", "emetteur":"'
+				+ $pseudo.val() + '", "recu":""}';
+		websocket.send(msg);
+		$message.val('').focus();
+	}
+
+	function connectToChatserver()
+	{
+		room = $('#room option:selected').val();
+		websocket = new WebSocket(serviceLocation + room);
+		websocket.onmessage = onMessageReceived;
+	}
+
+	function leaveRoom()
+	{
+		websocket.close();
+		$chatWindow.empty();
+		$('.salle').hide();
+		$('.accueil').show();
+		$pseudo.focus();
+	}
+
+	$(document).ready(function()
+	{
 		$pseudo = $('#pseudo');
 		$room = $('#room');
 		$vmessage = $('#vmessage');
 
 		$('.salle').hide();
 
-		$('#getout').click(function() {
+		$('#getout').click(function()
+		{
 			$('.accueil').show();
 			$('.salle').hide();
 		});
 
-		$('#enter').click(function() {
+		$('#enter').click(function()
+		{
 			$('.accueil').hide();
 			$('.salle').show();
-			$('.salle h2').text('Chat # ' + $pseudo.val() + "@" + $room.val());
+			$('.salle h3').text('Chat # ' + $pseudo.val() + "@" + $room.val());
 			$('.vmessage').focus();
 		});
 
@@ -43,7 +85,7 @@
 
 
 <body>
-	<!-- Accueil -->
+	<!-- Accueil | Page de connexion -->
 	<div class="accueil">
 		<div>
 			<!-- <form action="/ma-page-de-traitement" method="post"> -->
@@ -66,8 +108,8 @@
 
 
 	<div class="salle">
-		<!-- Salle -->
-		<h2 class="pseudoRoomDisplay"></h2>
+		<!-- Salle | Page de communication -->
+		<h3 class="pseudoRoomDisplay"></h3>
 		<div>
 			<label for="composantvide">Composant vide</label>
 			<!-- 			<output type="text" id="composantvide" /> -->
